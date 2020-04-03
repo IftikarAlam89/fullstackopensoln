@@ -2,36 +2,59 @@ import React, {useEffect, useState} from 'react'
 import Numbers from "./components/numbers";
 import Searchbar from "./components/search";
 import Adddetail from "./components/adddetails";
+import personService from "./services/persons";
 import axios from "axios";
 
 const App = () => {
-  const [ persons, setPersons] = useState([])
-  useEffect(()=>{axios
-      .get('http://localhost:3001/persons')
-      .then(response => {
-        setPersons(response.data)})},[])
 
-  const [ newName, setNewName ] = useState('')
-  const [ newNumber, setNewNumber ] = useState('')
-  const [ searchValue, setSearchValue ] = useState('')
-  const InpChange=(event)=>{
-    setNewName(event.target.value)
-  }
-  const NumberChange=(event)=>{
-    setNewNumber(event.target.value)
 
-  }
-  const Search=(event)=>{
-    setSearchValue(event.target.value)
-    const newPersons=[...persons]
-    setPersons(newPersons.filter(person=>person.name.toLowerCase().startsWith(searchValue.toLowerCase())))
-  }
-  const Submit=(event)=>{
-    event.preventDefault()
-    if (!persons.some(person=>person.name===newName)){
-      setPersons(persons.concat({name:newName,number:newNumber}))
+    const [ persons, setPersons] = useState([])
+    const [ newName, setNewName ] = useState('')
+    const [ newNumber, setNewNumber ] = useState('')
+    const [ searchValue, setSearchValue ] = useState('')
+
+    useEffect(()=>{personService.getAll().then(returnedPersons=>{setPersons(returnedPersons)})},[])
+    const InpChange=(event)=>{
+        setNewName(event.target.value)
+    }
+    const NumberChange=(event)=>{
+        setNewNumber(event.target.value)
+    }
+    const Search=(event)=>{
+        setSearchValue(event.target.value)
+        const newPersons=[...persons]
+        setPersons(newPersons.filter(person=>person.name.toLowerCase().startsWith(searchValue.toLowerCase())))
+    }
+
+    const deletePerson=(id)=>{
+        const nPersons=[...persons]
+        const delperson=nPersons.find(per=>per.id===id)
+        if (window.confirm(`Delete ${delperson.name} ?`)){
+            personService.deletePer(id).then(returnedPersons=>{
+                console.log(returnedPersons)
+                setPersons(nPersons.filter(per=>per.id!=id))})
+        }
+    }
+
+    const Submit=(event)=>{
+        event.preventDefault()
+        const nPersons={
+            name:newName,number:newNumber
+        }
+        if (!persons.some(person=>person.name===newName)){
+            personService.create(nPersons)
+                .then(returnedPerson=>{setPersons(persons.concat(returnedPerson))})
+
     }else{
-      window.alert(`${newName} is already added to phonebook`)
+     if (window.confirm(`${newName} is already added to phonebook, replace the old number with a new one?`)){
+         const nPerson=persons.filter(per=>per.name===newName)[0]
+         console.log(nPerson)
+         console.log(nPerson.id)
+         const changedPerson={...nPerson,number:newNumber}
+         personService.update(nPerson.id,changedPerson)
+             .then(returnedPerson=>{
+                 setPersons(persons.map(person=>person.id!=nPerson.id? person:returnedPerson))})
+     }
     }
     setNewName('')
     setNewNumber('')
@@ -44,7 +67,7 @@ const App = () => {
         <h3>add a new</h3>
         <Adddetail name={newName} number={newNumber} inchange={InpChange} nchange={NumberChange} submit={Submit}/>
         <h3>Numbers</h3>
-        <Numbers persons={persons}/>
+        <Numbers persons={persons} delt={deletePerson}/>
       </div>
   )
 }

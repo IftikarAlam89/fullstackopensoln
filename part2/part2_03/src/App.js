@@ -21,6 +21,7 @@ const App=()=> {
         })
   }, [])
 
+
   useEffect(() => {
     if (results[0]===undefined || results[0].capital===""){
       return
@@ -29,15 +30,11 @@ const App=()=> {
       const params={
         access_key: 'c7c1ba1ee7a7468e4f0d76021b038140',
         query: results[0].capital
-
       }
       axios.get(url,{params}).then((response)=>{
         setApires(response.data)})
     }
-
   }, [results])
-
-
 
 
   const onChanged = (event) => {
