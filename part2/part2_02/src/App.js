@@ -8,7 +8,6 @@ import axios from "axios";
 
 const App = () => {
 
-
     const [ persons, setPersons] = useState([])
     const [ newName, setNewName ] = useState('')
     const [ newNumber, setNewNumber ] = useState('')
@@ -16,7 +15,7 @@ const App = () => {
     const [ errorMessage,seterrorMessage ] = useState(null)
     const [ err,seterr ] = useState(false)
 
-    useEffect(()=>{personService.getAll().then(returnedPersons=>{setPersons(returnedPersons)})},[])
+    useEffect(()=>{personService.getAll().then(returnedPersons=>{setPersons(returnedPersons.filter(person=>person.name.toLowerCase().includes(searchValue.toLowerCase())))})},[searchValue])
     const InpChange=(event)=>{
         setNewName(event.target.value)
     }
@@ -25,8 +24,6 @@ const App = () => {
     }
     const Search=(event)=>{
         setSearchValue(event.target.value)
-        const newPersons=[...persons]
-        setPersons(newPersons.filter(person=>person.name.toLowerCase().startsWith(searchValue.toLowerCase())))
     }
 
     const deletePerson=(id)=>{
@@ -49,26 +46,34 @@ const App = () => {
                 .then(returnedPerson=>{setPersons(persons.concat(returnedPerson))
                     seterrorMessage(`Added ${newName}`)
                 setTimeout(()=>{seterrorMessage(null)},5000)})
+                .catch(error=>{
+                    console.log(error.response.data)
+                })
+
 
 
     }else{
-     if (window.confirm(`${newName} is already added to phonebook, replace the old number with a new one?`)){
-         const nPerson=persons.filter(per=>per.name===newName)[0]
-         console.log(nPerson)
-         console.log(nPerson.id)
-         const changedPerson={...nPerson,number:newNumber}
-         personService.update(nPerson.id,changedPerson)
-             .then(returnedPerson=>{
-                 setPersons(persons.map(person=>person.id!==nPerson.id? person:returnedPerson))})
-             .catch(error=>{
-                 seterrorMessage(`Information of ${nPerson.name} has already been removed from server`)
-                 seterr(true)
-                 setTimeout(()=>{seterrorMessage(null)
-                 seterr(false)},5000)
-                 setPersons(persons.filter(per=>per.id!==nPerson.id))
-             })
-     }
-    }
+     if (window.confirm(`${newName} is already added to database, replace the old number with a new one?`)){
+
+         personService.getAll()
+             .then(returnedPersons=>{const newP=returnedPersons.filter(person=>person.name===newName)[0]
+             return newP})
+             .then(per=>
+            { const changedPerson={...per,number:newNumber}
+             personService.update(per.id,changedPerson)
+                 .then(response => {
+                setPersons(persons.map(person => person.id !== per.id ? person : response))
+            }).catch(error=>{
+                 console.log(error.response.data)
+             })}).catch(error=>{
+                     seterrorMessage(`Information of ${nPersons.name} has already been removed from server`)
+                     seterr(true)
+                     setTimeout(()=>{seterrorMessage(null)
+                         seterr(false)},5000)
+                     setPersons(persons.filter(per=>per.name!==nPersons.name))})}}
+
+
+
     setNewName('')
     setNewNumber('')
   }

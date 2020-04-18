@@ -1,0 +1,3 @@
+[submodule "part3/fullstackopen_node"]
+	path = part3/fullstackopen_node
+	url = https://github.com/IftikarAlam89/fullstackopen_node.git
