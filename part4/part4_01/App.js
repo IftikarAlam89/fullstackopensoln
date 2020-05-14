@@ -16,6 +16,10 @@ app.use(express.json())
 app.use('/api/blogs',router)
 app.use('/api/users',userrouter)
 app.use('/api/login',loginRouter)
+if (process.env.NODE_ENV === 'test'){
+    const testingRouter = require('./pathcontroller/testrouter')
+    app.use('/api/testing',testingRouter)
+}
 
 logger.info('Connecting to',config.MONGODB_URI)
 
